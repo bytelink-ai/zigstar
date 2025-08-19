@@ -1,46 +1,43 @@
-# Example Home Assistant add-on repository
+# ZigStar CC2538 Flasher Repository
 
-This repository can be used as a "blueprint" for add-on development to help you get started.
-
-Add-on documentation: <https://developers.home-assistant.io/docs/add-ons>
-
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fhome-assistant%2Faddons-example)
+This repository contains Home Assistant add-ons for flashing ZigStar devices with Z-Stack firmware.
 
 ## Add-ons
 
-This repository contains the following add-ons
+This repository contains the following add-on:
 
-### [Example add-on](./example)
+* **ZigStar CC2538 FW Flasher**  
+Flash Z-Stack firmware to ZigStar CC2538 based Coordinators over the network
 
-![Supports aarch64 Architecture][aarch64-shield]
-![Supports amd64 Architecture][amd64-shield]
-![Supports armhf Architecture][armhf-shield]
-![Supports armv7 Architecture][armv7-shield]
-![Supports i386 Architecture][i386-shield]
+## Installation
 
-_Example add-on to use as a blueprint for new add-ons._
+Adding this add-ons repository to your Home Assistant instance is easy. In the Home Assistant add-on store, you can add a repository.
 
-<!--
+Use the following URL to add this repository:
 
-Notes to developers after forking or using the github template feature:
-- While developing comment out the 'image' key from 'example/config.yaml' to make the supervisor build the addon
-  - Remember to put this back when pushing up your changes.
-- When you merge to the 'main' branch of your repository a new build will be triggered.
-  - Make sure you adjust the 'version' key in 'example/config.yaml' when you do that.
-  - Make sure you update 'example/CHANGELOG.md' when you do that.
-  - The first time this runs you might need to adjust the image configuration on github container registry to make it public
-  - You may also need to adjust the github Actions configuration (Settings > Actions > General > Workflow > Read & Write)
-- Adjust the 'image' key in 'example/config.yaml' so it points to your username instead of 'home-assistant'.
-  - This is where the build images will be published to.
-- Rename the example directory.
-  - The 'slug' key in 'example/config.yaml' should match the directory name.
-- Adjust all keys/url's that points to 'home-assistant' to now point to your user/fork.
-- Share your repository on the forums https://community.home-assistant.io/c/projects/9
-- Do awesome stuff!
- -->
+```
+https://github.com/yourusername/zigstar
+```
 
-[aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
-[amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
-[armhf-shield]: https://img.shields.io/badge/armhf-yes-green.svg
-[armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
-[i386-shield]: https://img.shields.io/badge/i386-yes-green.svg
+## Usage
+
+1. Install the ZigStar CC2538 FW Flasher add-on
+2. Configure the device IP address and port
+3. Upload your Z-Stack firmware file
+4. Start the flashing process
+
+## Supported Devices
+
+- ZigStar CC2538 based coordinators
+- Compatible with Z-Stack 3.x.0 firmware
+
+## Credits
+
+Special thanks to:
+- [JelmerT/cc2538-bsl](https://github.com/JelmerT/cc2538-bsl) for the CC2538 bootloader tool
+- [Koenkk/Z-Stack-firmware](https://github.com/Koenkk/Z-Stack-firmware) for the Z-Stack firmware
+- [mercenaruss/zigstar_addons](https://github.com/mercenaruss/zigstar_addons) for inspiration
+
+## License
+
+This project is licensed under the Apache License 2.0.

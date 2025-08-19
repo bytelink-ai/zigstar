@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# ZigStar CC2538 Flasher service finished
+# ==============================================================================
+
+bashio::log.info "ZigStar CC2538 Flasher service finished"

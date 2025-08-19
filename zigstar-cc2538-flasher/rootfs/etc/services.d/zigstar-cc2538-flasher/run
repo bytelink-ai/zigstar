@@ -1,0 +1,61 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start the ZigStar CC2538 Flasher service
+# ==============================================================================
+
+bashio::log.info "Starting ZigStar CC2538 Flasher..."
+
+# Get configuration
+DEVICE_IP=$(bashio::config 'device_ip')
+DEVICE_PORT=$(bashio::config 'device_port')
+FIRMWARE_FILE=$(bashio::config 'firmware_file')
+BAUD_RATE=$(bashio::config 'baud_rate')
+ERASE_FLASH=$(bashio::config 'erase_flash')
+VERIFY_FLASH=$(bashio::config 'verify_flash')
+PREPARE_DEVICE=$(bashio::config 'prepare_device')
+WAIT_TIME=$(bashio::config 'wait_time')
+
+# Check if firmware file is provided
+if [ -z "$FIRMWARE_FILE" ]; then
+    bashio::log.error "No firmware file specified. Please upload a firmware file first."
+    exit 1
+fi
+
+# Check if firmware file exists in share directory
+FIRMWARE_PATH="/share/$FIRMWARE_FILE"
+if [ ! -f "$FIRMWARE_PATH" ]; then
+    bashio::log.error "Firmware file not found: $FIRMWARE_PATH"
+    exit 1
+fi
+
+bashio::log.info "Device: $DEVICE_IP:$DEVICE_PORT"
+bashio::log.info "Firmware: $FIRMWARE_FILE"
+bashio::log.info "Baud Rate: $BAUD_RATE"
+bashio::log.info "Prepare Device: $PREPARE_DEVICE"
+bashio::log.info "Wait Time: ${WAIT_TIME}s"
+bashio::log.info "Erase Flash: $ERASE_FLASH"
+bashio::log.info "Verify Flash: $VERIFY_FLASH"
+
+# Build command arguments
+CMD_ARGS="--device-ip $DEVICE_IP --device-port $DEVICE_PORT --firmware $FIRMWARE_PATH --baud-rate $BAUD_RATE --wait-time $WAIT_TIME"
+
+if [ "$PREPARE_DEVICE" = "false" ]; then
+    CMD_ARGS="$CMD_ARGS --skip-prepare"
+fi
+
+if [ "$ERASE_FLASH" = "true" ]; then
+    CMD_ARGS="$CMD_ARGS --erase"
+fi
+
+if [ "$VERIFY_FLASH" = "true" ]; then
+    CMD_ARGS="$CMD_ARGS --verify"
+fi
+
+# Execute the flasher
+bashio::log.info "Starting firmware flash..."
+if zigstar-flasher $CMD_ARGS; then
+    bashio::log.info "Firmware flashing completed successfully!"
+else
+    bashio::log.error "Firmware flashing failed!"
+    exit 1
+fi

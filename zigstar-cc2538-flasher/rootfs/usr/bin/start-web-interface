@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Start the ZigStar CC2538 Flasher web interface
+
+echo "Starting ZigStar CC2538 Flasher web interface..."
+
+# Set default port if not specified
+export PORT=${PORT:-8080}
+
+# Start the web interface
+exec python3 /usr/bin/web-interface.py

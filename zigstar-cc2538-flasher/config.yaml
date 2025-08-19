@@ -1,0 +1,34 @@
+# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
+name: "ZigStar CC2538 FW Flasher"
+version: "1.0.0"
+slug: "zigstar-cc2538-flasher"
+description: "Flash Z-Stack firmware to ZigStar CC2538 based coordinators over the network"
+url: "https://github.com/yourusername/zigstar/tree/main/zigstar-cc2538-flasher"
+arch:
+  - armhf
+  - armv7
+  - aarch64
+  - amd64
+  - i386
+init: false
+map:
+  - share:rw
+options:
+  device_ip: "192.168.1.100"
+  device_port: "23"
+  firmware_file: ""
+  baud_rate: "115200"
+  prepare_device: true
+  wait_time: 30
+  erase_flash: true
+  verify_flash: true
+schema:
+  device_ip: "str"
+  device_port: "str"
+  firmware_file: "str?"
+  baud_rate: "str"
+  prepare_device: "bool"
+  wait_time: "int(10,120)"
+  erase_flash: "bool"
+  verify_flash: "bool"
+image: "ghcr.io/yourusername/{arch}-addon-zigstar-cc2538-flasher"
