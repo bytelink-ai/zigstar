@@ -10,5 +10,3 @@ labels:
   org.opencontainers.image.description: "Flash Z-Stack firmware to ZigStar CC2538 based coordinators"
   org.opencontainers.image.source: "https://github.com/bytelink-ai/zigstar"
   org.opencontainers.image.licenses: "Apache License 2.0"
-args:
-  TEMPIO_VERSION: "2021.09.0"

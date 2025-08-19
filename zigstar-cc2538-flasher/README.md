@@ -6,7 +6,7 @@
 ![Supports armv7 Architecture][armv7-shield]
 ![Supports i386 Architecture][i386-shield]
 
-Flash Z-Stack firmware to ZigStar CC2538 based coordinators over the network using the cc2538-bsl tool.
+Flash Z-Stack firmware to ByteLink Exodus1 over the network.
 
 ## About
 
