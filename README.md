@@ -16,7 +16,7 @@ Adding this add-ons repository to your Home Assistant instance is easy. In the H
 Use the following URL to add this repository:
 
 ```
-https://github.com/yourusername/zigstar
+https://github.com/bytelink-ai/zigstar
 ```
 
 ## Usage

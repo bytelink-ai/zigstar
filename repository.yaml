@@ -1,4 +1,4 @@
 # https://developers.home-assistant.io/docs/add-ons/repository#repository-configuration
 name: ZigStar CC2538 Flasher Repository
-url: 'https://github.com/yourusername/zigstar'
-maintainer: Your Name <your.email@example.com>
+url: 'https://github.com/bytelink-ai/zigstar'
+maintainer: Bytelink AI <info@bytelink.ai>

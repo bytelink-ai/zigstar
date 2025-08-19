@@ -31,7 +31,7 @@ The add-on consists of several components:
 ### 1. Add Repository
 1. Go to **Settings** → **Add-ons** → **Add-on Store**
 2. Click the three dots menu (⋮) → **Repositories**
-3. Add: `https://github.com/yourusername/zigstar`
+3. Add: `https://github.com/bytelink-ai/zigstar`
 4. Click **Add**
 
 ### 2. Install Add-on
@@ -181,7 +181,7 @@ retries: 3            # Number of retry attempts
 ### Building from Source
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/zigstar.git
+git clone https://github.com/bytelink-ai/zigstar.git
 cd zigstar/zigstar-cc2538-flasher
 
 # Build Docker image
@@ -237,7 +237,7 @@ Options:
 ### Community Resources
 - [Home Assistant Community](https://community.home-assistant.io/)
 - [ZigStar Discord](https://discord.gg/zigstar)
-- [GitHub Issues](https://github.com/yourusername/zigstar/issues)
+- [GitHub Issues](https://github.com/bytelink-ai/zigstar/issues)
 
 ### Reporting Issues
 When reporting issues, include:
