@@ -1,4 +1,4 @@
-name: Build and Publish Add-ons
+name: Build and push
 
 on:
   push:
@@ -8,25 +8,35 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      security-events: write
-
     strategy:
+      fail-fast: false
       matrix:
-        addon: [ zigstar-cc2538-flasher ]
+        addon: [zigstar-cc2538-flasher]
         platform:
-          - { arch: amd64, docker_platform: linux/amd64, tempio_arch: amd64, base: "ghcr.io/home-assistant/amd64-base:3.15" }
-          - { arch: aarch64, docker_platform: linux/arm64, tempio_arch: aarch64, base: "ghcr.io/home-assistant/aarch64-base:3.15" }
-          - { arch: armv7, docker_platform: linux/arm/v7, tempio_arch: armv7, base: "ghcr.io/home-assistant/armv7-base:3.15" }
-          - { arch: armhf, docker_platform: linux/arm/v6, tempio_arch: armhf, base: "ghcr.io/home-assistant/armhf-base:3.15" }
-          - { arch: i386, docker_platform: linux/386, tempio_arch: i386, base: "ghcr.io/home-assistant/i386-base:3.15" }
+          - name: aarch64
+            docker_platform: linux/arm64
+            tempio_arch: aarch64
+            base_image: ghcr.io/home-assistant/aarch64-base:3.15
+          - name: amd64
+            docker_platform: linux/amd64
+            tempio_arch: amd64
+            base_image: ghcr.io/home-assistant/amd64-base:3.15
+          - name: armhf
+            docker_platform: linux/arm/v6
+            tempio_arch: armhf
+            base_image: ghcr.io/home-assistant/armhf-base:3.15
+          - name: armv7
+            docker_platform: linux/arm/v7
+            tempio_arch: armv7
+            base_image: ghcr.io/home-assistant/armv7-base:3.15
+          - name: i386
+            docker_platform: linux/386
+            tempio_arch: i386
+            base_image: ghcr.io/home-assistant/i386-base:3.15
 
     steps:
       - name: Checkout
@@ -35,6 +45,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Extract add-on version
+        id: version
+        run: |
+          VERSION=$(grep '^version:' zigstar-cc2538-flasher/config.yaml | cut -d'"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Add-on version: $VERSION"
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -42,36 +59,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get add-on version
-        id: version
-        run: |
-          VERSION=$(grep "^version:" ./${{ matrix.addon }}/config.yaml | cut -d'"' -f2)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Add-on version: $VERSION"
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.addon }}
-          tags: |
-            type=raw,value=${{ steps.version.outputs.version }}
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./${{ matrix.addon }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ matrix.platform.docker_platform }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.platform.name }}-addon-${{ matrix.addon }}:${{ steps.version.outputs.version }}
           build-args: |
-            BUILD_FROM=${{ matrix.platform.base }}
+            BUILD_FROM=${{ matrix.platform.base_image }}
             TEMPIO_VERSION=2021.09.0
             BUILD_ARCH=${{ matrix.platform.tempio_arch }}
+
+      - name: Generate metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.platform.name }}-addon-${{ matrix.addon }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=${{ steps.version.outputs.version }}
