@@ -10,7 +10,9 @@ Flash Z-Stack firmware to ZigStar CC2538 based coordinators over the network usi
 
 ## About
 
-This add-on allows you to flash Z-Stack firmware to your ZigStar CC2538 devices directly from Home Assistant. It uses the [cc2538-bsl](https://github.com/JelmerT/cc2538-bsl) tool to communicate with the device over telnet and flash the firmware.
+This add-on allows you to flash Z-Stack 3.x.0 coordinator firmware to your ZigStar CC2538 devices directly from Home Assistant. It uses the [cc2538-bsl](https://github.com/JelmerT/cc2538-bsl) tool to communicate with the device over telnet and flash the firmware.
+
+**Recommended Firmware**: [Z-Stack 3.x.0 Coordinator Firmware](https://github.com/Koenkk/Z-Stack-firmware/tree/Z-Stack_3.x.0_router_20250403/coordinator/Z-Stack_3.x.0)
 
 ## Features
 
@@ -50,12 +52,11 @@ Notes:
 
 ## Example Configurations
 
-### Download and flash from URL (ZIP)
-```yaml
+### Download and flash Z-Stack 3.x.0 coordinator firmware
 device_ip: "192.168.1.50"
 device_port: "23"
-firmware_url: "https://example.com/CC2652RB_coordinator_20250321.zip"
-firmware_zip_inner: "CC2652RB_coordinator_20250321.hex.bin"  # optional if autodetect works
+firmware_url: "https://github.com/Koenkk/Z-Stack-firmware/raw/Z-Stack_3.x.0_router_20250403/coordinator/Z-Stack_3.x.0/bin/CC2652RB_coordinator_20250321.zip"
+firmware_zip_inner: "CC2652RB_coordinator_20250321.hex.bin"
 baud_rate: "115200"
 prepare_device: true
 wait_time: 45
@@ -93,7 +94,7 @@ The add-on follows a 4-step process:
 
 ## Credits
 
-- [JelmerT/cc2538-bsl](https://github.com/JelmerT/cc2538-bsl) - CC2538 bootloader tool
+- [JelmerT/cc2538-bsl](https://github.com/JelmerT/cc2538-bsl) - CC2538 bootloader tool and patch
 - [Koenkk/Z-Stack-firmware](https://github.com/Koenkk/Z-Stack-firmware) - Z-Stack firmware
 - [mercenaruss/zigstar_addons](https://github.com/mercenaruss/zigstar_addons) - Add-on architecture inspiration
 
