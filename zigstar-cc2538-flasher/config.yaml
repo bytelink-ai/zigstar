@@ -1,6 +1,6 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
 name: "ZigStar CC2538 FW Flasher"
-version: "1.0.0"
+version: "1.1.0"
 slug: "zigstar-cc2538-flasher"
 description: "Flash Z-Stack firmware to ZigStar CC2538 based coordinators over the network"
 url: "https://github.com/bytelink-ai/zigstar/tree/main/zigstar-cc2538-flasher"
@@ -17,6 +17,8 @@ options:
   device_ip: "192.168.1.100"
   device_port: "23"
   firmware_file: ""
+  firmware_url: ""
+  firmware_zip_inner: "" # optional inner .bin path when URL is a zip
   baud_rate: "115200"
   prepare_device: true
   wait_time: 30
@@ -26,6 +28,8 @@ schema:
   device_ip: "str"
   device_port: "str"
   firmware_file: "str?"
+  firmware_url: "str?"
+  firmware_zip_inner: "str?"
   baud_rate: "str"
   prepare_device: "bool"
   wait_time: "int(10,120)"

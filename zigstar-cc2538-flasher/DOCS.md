@@ -2,257 +2,95 @@
 
 ## Overview
 
-The ZigStar CC2538 Flasher is a Home Assistant add-on that allows you to flash Z-Stack firmware to ZigStar CC2538-based coordinators over the network. This add-on eliminates the need for physical connections and provides a user-friendly interface for firmware updates.
+The ZigStar CC2538 Flasher is a Home Assistant add-on that allows you to flash Z-Stack firmware to ZigStar CC2538-based coordinators over the network. The add-on is configured via the Home Assistant frontend; no separate web interface is exposed.
 
 ## Architecture
 
-The add-on consists of several components:
-
-1. **Main Flasher Script** (`zigstar-flasher`): Python script that handles the firmware flashing process
-2. **Web Interface** (`web-interface.py`): Simple HTTP server providing a web-based UI
-3. **Service Scripts**: Home Assistant service management scripts
-4. **Docker Container**: Alpine Linux-based container with Python and cc2538-bsl tool
+- **Service script**: Reads add-on configuration and orchestrates download/extract and flashing
+- **Flasher** (`zigstar-flasher`): Python script handling preparation, readiness wait, and calling cc2538-bsl
+- **Container**: Alpine-based image with Python, curl, unzip, and cc2538-bsl
 
 ## Prerequisites
 
-### Device Requirements
-- ZigStar device with CC2538 chip
-- Device must be in bootloader mode
-- Network connectivity (telnet access)
-- Compatible Z-Stack firmware file
-
-### Home Assistant Requirements
-- Home Assistant Core or Supervised installation
-- Access to add-on store
-- Network access to ZigStar device
+- ZigStar device with CC2538 chip, reachable over HTTP and telnet from Home Assistant
+- Compatible Z-Stack firmware file (.bin) or a URL (direct .bin or .zip)
 
 ## Installation
 
-### 1. Add Repository
-1. Go to **Settings** → **Add-ons** → **Add-on Store**
-2. Click the three dots menu (⋮) → **Repositories**
-3. Add: `https://github.com/bytelink-ai/zigstar`
-4. Click **Add**
+1. Add repository: `https://github.com/bytelink-ai/zigstar`
+2. Install the "ZigStar CC2538 FW Flasher" add-on
+3. Configure options in the add-on UI
 
-### 2. Install Add-on
-1. Find "ZigStar CC2538 FW Flasher" in the add-on store
-2. Click **Install**
-3. Wait for installation to complete
-
-### 3. Configuration
-Configure the add-on with your device settings:
+## Configuration
 
 ```yaml
-device_ip: "192.168.1.50"        # Your ZigStar device IP
-device_port: "23"                 # Telnet port (usually 23)
-firmware_file: "firmware.bin"     # Firmware filename in /share
-baud_rate: "115200"               # Communication baud rate
-erase_flash: true                 # Erase flash before writing
-verify_flash: true                # Verify flash after writing
+device_ip: "192.168.1.50"
+device_port: "23"
+firmware_url: ""              # Optional: .bin or .zip URL
+firmware_zip_inner: ""        # Optional: inner .bin path when URL is a zip
+firmware_file: ""             # Optional: local file under /share
+baud_rate: "115200"
+prepare_device: true
+wait_time: 30
+erase_flash: true
+verify_flash: true
 ```
+
+- If `firmware_url` is set and points to a `.zip`, the add-on extracts it and uses the first `.bin` found unless `firmware_zip_inner` is set.
+- If `firmware_url` is empty, the add-on uses `firmware_file` from `/share`.
 
 ## Usage
 
-### Method 1: Service-based Flashing
-1. **Upload Firmware**: Place your `.bin` file in the `/share` directory
-2. **Configure Settings**: Set device IP, port, and firmware filename
-3. **Start Add-on**: Click **Start** to begin flashing
-4. **Monitor Logs**: Check the logs for progress and results
+1. Provide the firmware via URL or copy a file to `/share`
+2. Configure device IP/port and firmware options
+3. Start the add-on and monitor logs in the Supervisor UI
 
-### Method 2: Web Interface
-1. **Start Add-on**: Start the add-on normally
-2. **Access Web UI**: Open the add-on in a new tab
-3. **Configure Settings**: Fill in the form with your device details
-4. **Upload Firmware**: Ensure firmware is in `/share` directory
-5. **Start Flashing**: Click "Start Flashing" button
+## Flashing Flow
 
-### Method 3: Command Line
-For advanced users, you can execute commands directly:
+1. Prepare device via HTTP: `POST http://<device_ip>/switch/zigbee_update/turn_on`
+2. Wait until telnet on `<device_ip>:<port>` is reachable (up to `wait_time`)
+3. Test connection
+4. Flash via `cc2538-bsl` over telnet with optional erase/verify
 
-```bash
-# Test connection
-zigstar-flasher --device-ip 192.168.1.50 --device-port 23 --firmware /share/firmware.bin --test-only
+## Examples
 
-# Flash with custom options
-zigstar-flasher --device-ip 192.168.1.50 --device-port 23 --firmware /share/firmware.bin --baud-rate 115200 --erase --verify
+### URL (ZIP) with inner path
+```yaml
+firmware_url: "https://example.com/CC2652RB_coordinator_20250321.zip"
+firmware_zip_inner: "CC2652RB_coordinator_20250321.bin"
 ```
 
-## Firmware Files
-
-### Supported Formats
-- `.bin` files (binary firmware)
-- Z-Stack 3.x.0 coordinator firmware
-- CC2652RB coordinator firmware
-
-### Recommended Firmware
-- **Z-Stack 3.x.0**: Latest stable release
-- **CC2652RB**: Optimized for CC2652RB chips
-- **Custom builds**: Compatible with CC2538 architecture
-
-### Download Sources
-- [Z-Stack Firmware Repository](https://github.com/Koenkk/Z-Stack-firmware)
-- [Official ZigStar Firmware](https://github.com/mercenaruss/zigstar_addons)
+### Local file from /share
+```yaml
+firmware_file: "CC2652RB_coordinator_20250321.bin"
+```
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Connection Problems
-```
-Error: Connection failed. Please check device IP and port.
-```
-**Solutions:**
-- Verify device IP address is correct
-- Ensure device is in bootloader mode
-- Check network connectivity
-- Verify telnet port is accessible
-
-#### Firmware Issues
-```
-Error: Firmware file not found
-```
-**Solutions:**
-- Upload firmware to `/share` directory
-- Check filename spelling
-- Ensure file has `.bin` extension
-- Verify file permissions
-
-#### Flashing Failures
-```
-Error: Firmware flashing failed
-```
-**Solutions:**
-- Check device compatibility
-- Verify firmware format
-- Ensure stable power supply
-- Check device bootloader mode
-
-### Debug Mode
-Enable debug logging by setting the log level in Home Assistant:
-
-```yaml
-logger:
-  default: info
-  logs:
-    custom_components.zigstar_flasher: debug
-```
-
-### Log Analysis
-Common log patterns and their meanings:
-
-```
-[INFO] Starting ZigStar CC2538 Flasher...
-[INFO] Device: 192.168.1.50:23
-[INFO] Firmware: firmware.bin
-[INFO] Connection successful!
-[INFO] Starting firmware flash...
-[INFO] Firmware flashing completed successfully!
-```
-
-## Advanced Configuration
-
-### Custom Baud Rates
-Supported baud rates:
-- 115200 (default, recommended)
-- 57600
-- 38400
-- 19200
-- 9600
-
-### Network Configuration
-For complex network setups:
-
-```yaml
-# Custom network configuration
-device_ip: "10.0.0.100"
-device_port: "2323"  # Custom telnet port
-timeout: 30           # Connection timeout in seconds
-retries: 3            # Number of retry attempts
-```
-
-### Security Considerations
-- Use dedicated network segment for flashing
-- Implement firewall rules if needed
-- Consider VPN access for remote flashing
-- Monitor access logs
+- Increase `wait_time` for slower devices (up to 120s)
+- Ensure the device is reachable from Home Assistant
+- If ZIP contains multiple candidates, set `firmware_zip_inner`
+- Check logs for detailed error messages (download/extract/connection)
 
 ## Development
 
-### Building from Source
+Build with GitHub Actions or locally using Docker. The workflow builds per-architecture using appropriate Home Assistant base images.
+
 ```bash
 # Clone repository
 git clone https://github.com/bytelink-ai/zigstar.git
 cd zigstar/zigstar-cc2538-flasher
 
-# Build Docker image
-docker build -t zigstar-cc2538-flasher .
-
-# Test locally
-docker run -it --rm zigstar-cc2538-flasher
+# Local build (single arch example)
+docker build \
+  --build-arg BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.15 \
+  --build-arg TEMPIO_VERSION=2023.12.0 \
+  --build-arg BUILD_ARCH=amd64 \
+  -t zigstar-cc2538-flasher:local .
 ```
-
-### Testing
-Run the test suite:
-```bash
-python3 test_flasher.py
-```
-
-### Contributing
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Add tests
-5. Submit pull request
-
-## API Reference
-
-### Command Line Options
-```bash
-zigstar-flasher [OPTIONS]
-
-Options:
-  --device-ip TEXT      Device IP address [required]
-  --device-port TEXT    Device port (default: 23)
-  --firmware PATH       Path to firmware file [required]
-  --baud-rate TEXT      Baud rate (default: 115200)
-  --erase               Erase flash before writing
-  --verify              Verify flash after writing
-  --help                Show help message
-```
-
-### Web API Endpoints
-- `GET /` - Web interface
-- `POST /flash` - Execute firmware flashing
-
-### Response Format
-```json
-{
-  "success": true,
-  "message": "Firmware flashing completed successfully"
-}
-```
-
-## Support
-
-### Community Resources
-- [Home Assistant Community](https://community.home-assistant.io/)
-- [ZigStar Discord](https://discord.gg/zigstar)
-- [GitHub Issues](https://github.com/bytelink-ai/zigstar/issues)
-
-### Reporting Issues
-When reporting issues, include:
-- Home Assistant version
-- Add-on version
-- Device model and firmware
-- Error logs
-- Steps to reproduce
-
-## License
-
-This project is licensed under the Apache License 2.0. See [LICENSE](../LICENSE) for details.
 
 ## Credits
 
-- **cc2538-bsl**: [JelmerT/cc2538-bsl](https://github.com/JelmerT/cc2538-bsl)
-- **Z-Stack Firmware**: [Koenkk/Z-Stack-firmware](https://github.com/Koenkk/Z-Stack-firmware)
-- **Inspiration**: [mercenaruss/zigstar_addons](https://github.com/mercenaruss/zigstar_addons)
+- [JelmerT/cc2538-bsl](https://github.com/JelmerT/cc2538-bsl)
+- [Koenkk/Z-Stack-firmware](https://github.com/Koenkk/Z-Stack-firmware)
+- [mercenaruss/zigstar_addons](https://github.com/mercenaruss/zigstar_addons)

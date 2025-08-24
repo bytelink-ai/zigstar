@@ -9,27 +9,78 @@ bashio::log.info "Starting ZigStar CC2538 Flasher..."
 DEVICE_IP=$(bashio::config 'device_ip')
 DEVICE_PORT=$(bashio::config 'device_port')
 FIRMWARE_FILE=$(bashio::config 'firmware_file')
+FIRMWARE_URL=$(bashio::config 'firmware_url')
+FIRMWARE_ZIP_INNER=$(bashio::config 'firmware_zip_inner')
 BAUD_RATE=$(bashio::config 'baud_rate')
 ERASE_FLASH=$(bashio::config 'erase_flash')
 VERIFY_FLASH=$(bashio::config 'verify_flash')
 PREPARE_DEVICE=$(bashio::config 'prepare_device')
 WAIT_TIME=$(bashio::config 'wait_time')
 
-# Check if firmware file is provided
-if [ -z "$FIRMWARE_FILE" ]; then
-    bashio::log.error "No firmware file specified. Please upload a firmware file first."
-    exit 1
+WORK_DIR=/data/flash
+mkdir -p "$WORK_DIR"
+
+# Resolve firmware path
+FIRMWARE_PATH=""
+
+# If a firmware URL is provided, download it
+if [ -n "$FIRMWARE_URL" ]; then
+    bashio::log.info "Downloading firmware from URL..."
+    DL_PATH="$WORK_DIR/fw_download"
+    mkdir -p "$DL_PATH"
+    FILE_NAME=$(basename "$FIRMWARE_URL")
+    OUT_PATH="$DL_PATH/$FILE_NAME"
+
+    if ! curl -fSL "$FIRMWARE_URL" -o "$OUT_PATH"; then
+        bashio::log.error "Failed to download firmware from $FIRMWARE_URL"
+        exit 1
+    fi
+
+    # If it's a zip and inner file specified, extract
+    if echo "$OUT_PATH" | grep -qi ".zip$"; then
+        bashio::log.info "Downloaded ZIP archive. Extracting..."
+        unzip -oq "$OUT_PATH" -d "$DL_PATH/extracted"
+        if [ -n "$FIRMWARE_ZIP_INNER" ]; then
+            if [ -f "$DL_PATH/extracted/$FIRMWARE_ZIP_INNER" ]; then
+                FIRMWARE_PATH="$DL_PATH/extracted/$FIRMWARE_ZIP_INNER"
+            else
+                bashio::log.error "Inner firmware not found in ZIP: $FIRMWARE_ZIP_INNER"
+                exit 1
+            fi
+        else
+            # Try to auto-pick first .bin
+            CANDIDATE=$(find "$DL_PATH/extracted" -type f -name "*.bin" | head -n1)
+            if [ -n "$CANDIDATE" ]; then
+                FIRMWARE_PATH="$CANDIDATE"
+            else
+                bashio::log.error "No .bin found in ZIP and no inner path provided."
+                exit 1
+            fi
+        fi
+    else
+        # Assume direct .bin
+        FIRMWARE_PATH="$OUT_PATH"
+    fi
 fi
 
-# Check if firmware file exists in share directory
-FIRMWARE_PATH="/share/$FIRMWARE_FILE"
-if [ ! -f "$FIRMWARE_PATH" ]; then
-    bashio::log.error "Firmware file not found: $FIRMWARE_PATH"
+# Fallback to share-mounted firmware file if provided
+if [ -z "$FIRMWARE_PATH" ] && [ -n "$FIRMWARE_FILE" ]; then
+    CANDIDATE="/share/$FIRMWARE_FILE"
+    if [ -f "$CANDIDATE" ]; then
+        FIRMWARE_PATH="$CANDIDATE"
+    else
+        bashio::log.error "Firmware file not found: $CANDIDATE"
+        exit 1
+    fi
+fi
+
+if [ -z "$FIRMWARE_PATH" ]; then
+    bashio::log.error "No firmware provided. Set 'firmware_url' or 'firmware_file'."
     exit 1
 fi
 
 bashio::log.info "Device: $DEVICE_IP:$DEVICE_PORT"
-bashio::log.info "Firmware: $FIRMWARE_FILE"
+bashio::log.info "Firmware: $FIRMWARE_PATH"
 bashio::log.info "Baud Rate: $BAUD_RATE"
 bashio::log.info "Prepare Device: $PREPARE_DEVICE"
 bashio::log.info "Wait Time: ${WAIT_TIME}s"

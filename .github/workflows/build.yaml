@@ -22,11 +22,11 @@ jobs:
       matrix:
         addon: [ zigstar-cc2538-flasher ]
         platform:
-          - { arch: amd64, base: "ghcr.io/home-assistant/amd64-base:3.15" }
-          - { arch: aarch64, base: "ghcr.io/home-assistant/aarch64-base:3.15" }
-          - { arch: armv7, base: "ghcr.io/home-assistant/armv7-base:3.15" }
-          - { arch: armhf, base: "ghcr.io/home-assistant/armhf-base:3.15" }
-          - { arch: i386, base: "ghcr.io/home-assistant/i386-base:3.15" }
+          - { arch: amd64, docker_platform: linux/amd64, tempio_arch: amd64, base: "ghcr.io/home-assistant/amd64-base:3.15" }
+          - { arch: aarch64, docker_platform: linux/arm64, tempio_arch: aarch64, base: "ghcr.io/home-assistant/aarch64-base:3.15" }
+          - { arch: armv7, docker_platform: linux/arm/v7, tempio_arch: armv7, base: "ghcr.io/home-assistant/armv7-base:3.15" }
+          - { arch: armhf, docker_platform: linux/arm/v6, tempio_arch: armhf, base: "ghcr.io/home-assistant/armhf-base:3.15" }
+          - { arch: i386, docker_platform: linux/386, tempio_arch: i386, base: "ghcr.io/home-assistant/i386-base:3.15" }
 
     steps:
       - name: Checkout
@@ -60,10 +60,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/${{ matrix.platform.arch }}
+          platforms: ${{ matrix.platform.docker_platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_FROM=${{ matrix.platform.base }}
-            TEMPIO_VERSION=2021.09.0
-            BUILD_ARCH=${{ matrix.platform.arch }}
+            TEMPIO_VERSION=2023.12.0
+            BUILD_ARCH=${{ matrix.platform.tempio_arch }}
